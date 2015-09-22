@@ -6,9 +6,9 @@ b = gets.chomp.to_f
 puts "Enter the length of the 3rd side:"
 c = gets.chomp.to_f
 if (a == b) && (b == c)
-  puts "The triangle is isolateral (равнобедренный)."
+  puts "The triangle is isolateral (равносторонний)."
 elsif (a == b) || (b == c) || (a == c)
-  puts "The triangle is isosceles (равносторонний)"
+  puts "The triangle is isosceles (равнобедренный)"
 else
   puts "The triangle is neither isolateral nor isosceles (не является ни равнобедренным, ни равносторонним)."
 end
