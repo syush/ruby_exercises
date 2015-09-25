@@ -25,18 +25,9 @@ else
   end
   daynum += d 
 
-  case daynum % 10
-    when 1
-      ending = "st"
-    when 2
-      ending = "nd"
-    when 3
-      ending = "rd"
-    else
-      ending = "th"
-  end
+  ending = {1 => "st", 2 => "nd", 3 => "rd", 4 => "th", 5 => "th", 6 => "th", 7 => "th", 8 => "th", 9 => "th", 0 => "th"}
 
-  puts "This day is the #{daynum.to_s + ending} day of the year."
+  puts "This day is the #{daynum.to_s + ending[daynum % 10]} day of the year."
   if bissex == 1 
     puts "The year is bissextile."
   end 
