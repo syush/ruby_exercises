@@ -47,3 +47,13 @@ sum = 0
 (n/k).times {|i| sum += (i+1) * k} 
 average = sum.to_f / (n / k)
 puts "Calculated with TIMES loop: Sum = #{sum}, average = #{average}"
+
+sum = 0
+i = 0
+loop do
+  i += k
+  break if i > n
+  sum += i
+end
+average = sum.to_f / (n / k)
+puts "Calculated with LOOP/BREAK loop: Sum = #{sum}, average = #{average}"
