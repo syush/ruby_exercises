@@ -63,6 +63,7 @@ class Train
     @num = num
     @speed = 0
     @station = nil
+    @forward = true
     @at_station = false
     @route = nil
   end
@@ -134,6 +135,7 @@ class Train
       elsif @route
         @station.release_train(self)
         @at_station = false
+        @forward = true
         @station = @route.next(@station)
       end
     else
@@ -148,6 +150,7 @@ class Train
       elsif @route
         @station.release_train(self)
         @at_station = false
+        @forward = false
         @station = @route.prev(@station)
       end
     else
@@ -170,7 +173,7 @@ class Train
   end
 
   def print_current_station
-    if @station 
+    if @at_station 
       puts "Train ##{@num} is currently at #{@station.name}."
     else
       puts "Train ##{@num} is not at a station currently."
@@ -178,22 +181,22 @@ class Train
   end
 
   def print_prev_station
-    if @cur_index > 0
-      puts "The previous station for train ##{@num} was #{@route[@cur_index-1].name}."
-    else
+    if @route.first?(@station) && (@at_station || @forward)         
       puts "Train ##{@num} is at the initial station."
+    else
+      prev =  @at_station || @forward ? @route.prev(@station) : @station
+      puts "The previous station on the route for train ##{@num} is #{prev.name}."
     end
   end
 
   def print_next_station
-    next_index = @station ? @cur_index : @cur_index + 1
-    if next_index < @route.length
-      puts "The next station for train ##{@num} is #{@route.get_station(next_index).name}."
-    else
+    if @route.last?(@station) && (@at_station || !@forward)         
       puts "Train ##{@num} is at the final destination."
+    else
+      nxt =  !@at_station && @forward ? @station : @route.next(@station) 
+      puts "The next station on the route for train ##{@num} is #{nxt.name}."
     end
   end
-
 
 end
 
