@@ -11,7 +11,6 @@ class Station
       puts "Error: station #{@name} trying to accept train ##{train.num} which is already there"
     else
       @train_list << train
-      train.arrive_at(self)
     end
   end
 
@@ -41,7 +40,6 @@ class Station
   def release_train (train)
     if @train_list.include?(train)
       @train_list.delete(train)
-      train.depart_from(self)
     else
       puts "Error: station #{@name} trying to release train ##{train.num} which is not there"
     end
@@ -65,6 +63,8 @@ class Train
     @num = num
     @speed = 0
     @station = nil
+    @at_station = false
+    @route = nil
   end
 
   attr_reader :num
@@ -118,25 +118,137 @@ class Train
     puts "Train ##{@num} has #{@num_cars} cars."
   end
    
-  def arrive_at(new_station)
-    if @station
-      puts "Error: before arriving at station #{new_station.name}, train ##{@num} must depart from station #{@station.name}"
+  def arrive
+    if @at_station
+      puts "Error: train ##{@num} is already at station #{@station.name}"
     else
-      @station = new_station
+      @station.accept_train(self)
+      @at_station = true
     end
   end
 
-  def depart_from(old_station)
-    if @station == old_station
-      @station = nil
-    else
-      if @station
-        puts "Error: train ##{@num} can't depart from #{old_station.name} because it is at #{@station.name}"
-      else
-        puts "Error: train ##{@num} can't depart from #{old_station.name} because it is not at a station"
+  def depart_forward
+    if @at_station
+      if @route && @route.last?(@station)
+        puts "Error: train ##{@num} is at the final destination; can't move forward."
+      elsif @route
+        @station.release_train(self)
+        @at_station = false
+        @station = @route.next(@station)
       end
+    else
+      puts "Error: train ##{@num} can't depart because it is not at a station."
+    end
+  end
+  
+  def depart_backward
+    if @at_station
+      if @route && @route.first?(@station)
+        puts "Error: train ##{@num} is at the starting point; can't move backward."
+      elsif @route
+        @station.release_train(self)
+        @at_station = false
+        @station = @route.prev(@station)
+      end
+    else
+      puts "Error: train ##{@num} can't depart because it is not at a station."
+    end
+  end
+
+  def assign_route(route)
+    if @station && @at_station
+      if route.include?(@station)
+        @route = route
+      else
+        puts "Error: before assigning the route, train ##{@num} must leave #{@station.name} which is not on the route."
+      end
+    else
+      @route = route
+      @station = @route.first
+      @at_station = false
+    end
+  end
+
+  def print_current_station
+    if @station 
+      puts "Train ##{@num} is currently at #{@station.name}."
+    else
+      puts "Train ##{@num} is not at a station currently."
+    end
+  end
+
+  def print_prev_station
+    if @cur_index > 0
+      puts "The previous station for train ##{@num} was #{@route[@cur_index-1].name}."
+    else
+      puts "Train ##{@num} is at the initial station."
+    end
+  end
+
+  def print_next_station
+    next_index = @station ? @cur_index : @cur_index + 1
+    if next_index < @route.length
+      puts "The next station for train ##{@num} is #{@route.get_station(next_index).name}."
+    else
+      puts "Train ##{@num} is at the final destination."
     end
   end
 
 
+end
+
+class Route
+  def initialize(first, last)
+    @list = [first, last]
+    @cur_index = 0
+  end
+
+  def add_station(new_station, prev_station)
+    if @list.include?(prev_station)
+      @list.insert(@list.index(prev_station) + 1, new_station)
+    else
+      puts "Error: can't insert #{new_station.name} since the route doesn't contain #{prev_station.name}"
+    end
+  end
+  
+  def remove_station(station)
+    if @list.include?(station)
+      @list.delete(station)
+    else
+      puts "Error: can't remove #{station.name} from the route since it's not there"
+    end
+  end
+
+  def first
+    @list.first
+  end
+  
+  def last
+    @list.last
+  end
+
+  def first?(station)
+    @list.first == station
+  end
+
+  def last?(station)
+    @list.last == station
+  end
+
+  def next(station)
+    @list[@list.index(station) + 1]
+  end
+
+  def prev(station)
+    @list[@list.index(station) - 1]
+  end
+
+  def include?(station)
+    @list.include?(station)
+  end
+
+  def print
+    puts "The route consists of the following stations:"
+    @list.each {|station| puts station.name}
+  end
 end
