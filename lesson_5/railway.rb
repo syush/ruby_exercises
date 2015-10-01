@@ -17,10 +17,24 @@ class Station
 
   def print_trains
     if @train_list.empty?
-      puts "There are no trains at station #{@name}"
+      puts "There are no trains at station #{@name}."
     else
       puts "The following trains are currently at station #{@name}:"
       @train_list.each {|train| puts "Train ##{train.num} (#{train.type})"}
+    end
+  end
+
+  def print_trains_per_type
+    trains_per_type = {passenger:[], freight:[]}
+    @train_list.each {|train| trains_per_type[train.type] << train}
+    [:passenger, :freight].each do |type|
+      n = trains_per_type[type].size
+      if n == 0
+        puts "There are no #{type} trains at station #{@name}."
+      else
+        puts "There #{n==1 ? "is" : "are"} #{n} #{type} train#{n==1 ? "" : "s"} at station #{@name}:"
+        trains_per_type[type].each {|train| puts "Train ##{train.num}"}
+      end
     end
   end
 
