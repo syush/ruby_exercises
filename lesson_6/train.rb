@@ -46,6 +46,7 @@ class Train
       puts "Error: can't attach a #{car.type} car to a #{@type} train"
     else
       @num_cars += 1
+      @cars << car
       car.attach(self, @num_cars)
     end
   end
@@ -53,6 +54,8 @@ class Train
   def remove_car
     if @speed == 0
       if @num_cars > 0
+        @cars.last.detach
+        @cars.pop
         @num_cars -= 1
       else
         puts "Error: can't remove a car; train ##{@num} is just a bare locomotive"
@@ -175,6 +178,7 @@ private
     @forward = true
     @at_station = false
     @route = nil
+    @cars = []
   end
 
 end

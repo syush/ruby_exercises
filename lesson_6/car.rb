@@ -1,5 +1,5 @@
 class Car
-  def initialize
+  def initialize(seats_or_load)
     @num = 0
     @train = nil
   end
@@ -13,5 +13,6 @@ class Car
 
   def detach
     @num = 0
+    @train = nil
   end
 end
