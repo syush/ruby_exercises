@@ -3,7 +3,6 @@ require_relative 'route'
 
 class Train
 
-
   def initialize (num, num_cars, type=:passenger)
     init_num(num)
     init_type(type)
@@ -148,7 +147,7 @@ class Train
     end
   end
  
-private
+protected
 
   def init_num(num)
     @num = num

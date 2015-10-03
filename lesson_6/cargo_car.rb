@@ -8,6 +8,12 @@ class CargoCar < Car
     @free_space = @capacity = capacity.to_f
   end
 
+  attr_reader :free_space
+  
+  def current_load
+    @capacity - @free_space
+  end
+  
   def load(volume)
     if @free_space < volume
       puts "Error: can't load #{volume} m^3; only #{@free_space} m^3 of room is available"
