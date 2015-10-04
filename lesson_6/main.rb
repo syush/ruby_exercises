@@ -31,8 +31,9 @@ loop do
   puts "12: Show the list of stations"
   puts "13: Show the list of routes"
   puts "14: Show the list of trains"
-  puts "15: Show the number of cars"
-  puts "16: Exit the program"
+  puts "15: Show trains at a particular station"
+  puts "16: Show the number of cars"
+  puts "17: Exit the program"
 
   choice = gets.chomp.to_i
   puts 
@@ -279,6 +280,14 @@ loop do
       trains.each {|key,value| puts "#{key.center(14)}|#{value.type.to_s.center(16)}| #{value.num_cars.to_s.center(16)}"}
     end
   when 15
+    puts "Please enter the station name:"
+    name = gets.chomp
+    if !stations[name]
+      puts "There is no such station."
+    else
+      stations[name].print_trains
+    end
+  when 16
     total_cargo = 0
     total_passenger = 0
     detached_cargo = 0
@@ -291,7 +300,7 @@ loop do
     end
     puts "There are #{total_cargo} cargo cars; #{detached_cargo} of them are detached."
     puts "There are #{total_passenger} passenger cars; #{detached_passenger} of them are detached."
-  when 16
+  when 17
     puts "Bye!"
     break
   else

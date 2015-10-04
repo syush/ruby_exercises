@@ -109,6 +109,7 @@ class Train
   end
 
   def move_directly(station)
+    @station.release_train(self) if @at_station
     @at_station = true
     @station = station
     station.accept_train(self)
