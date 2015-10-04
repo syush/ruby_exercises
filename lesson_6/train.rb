@@ -3,16 +3,17 @@ require_relative 'route'
 
 class Train
 
-  def initialize (num, num_cars, type=:passenger)
+  def initialize (num, type=:passenger)
     init_num(num)
     init_type(type)
-    init_num_cars(num_cars)
     init_defaults
   end
 
   attr_reader :num
   attr_reader :type
   attr_reader :num_cars
+  attr_reader :at_station
+  attr_reader :cars
 
   def speed_up
     if @speed > 100
@@ -107,6 +108,12 @@ class Train
     end
   end
 
+  def move_directly(station)
+    @at_station = true
+    @station = station
+    station.accept_train(self)
+  end
+
   def assign_route(route)
     if @station && @at_station
       if route.include?(@station)
@@ -162,15 +169,6 @@ protected
     end
   end
 
-  def init_num_cars(num_cars)
-    if num_cars >= 0
-      @num_cars = num_cars
-    else
-      puts "Error: negative number of cars" 
-      @num_cars = 0
-    end
-  end 
-
   def init_defaults
     @speed = 0
     @station = nil
@@ -178,6 +176,7 @@ protected
     @at_station = false
     @route = nil
     @cars = []
+    @num_cars = 0
   end
 
 end

@@ -50,8 +50,9 @@ class Route
     @list.include?(station)
   end
 
-  def print
-    puts "The route consists of the following stations:"
-    @list.each {|station| puts station.name}
+  def print_text
+    text = ""
+    @list.each {|station| text += "-" + station.name + "-"}
+    print text
   end
 end

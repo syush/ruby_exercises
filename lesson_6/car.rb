@@ -15,4 +15,8 @@ class Car
     @num = 0
     @train = nil
   end
+
+  def detached
+    @num == 0
+  end
 end
