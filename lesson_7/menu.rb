@@ -10,7 +10,6 @@ require_relative 'cargo_train'
 class Menu
 
 def initialize
-  @trains = {}
   @cars = []
   @routes = []
 end
@@ -129,53 +128,55 @@ def create_train
   else
     puts "Operation failed: unknown train type"
   end 
-  @trains[num] = new_train if new_train  
   puts "Done" if new_train
+end
+
+def find_train(num)
+  train = Train.get_by_number(num)
+  puts "There is no train ##{name}. Please create a train first." if !train
+  train
+end
+
+def get_train_from_user
+  num = gets.chomp
+  find_train(num)
 end
 
 def attach_car
   puts "Let's attach a car to a train. Please enter the train number:"
-  train_num = gets.chomp
-  if !@trains[train_num]
-    puts "There is no train with this number. Please create a train first"
+  train = get_train_from_user
+  return if !train
+  success = false
+  @cars.each do |car| 
+    if car.detached && train.type == car.type
+      train.add_car(car)
+      success = true
+      break 
+    end
+  end
+  if success
+    puts "A car was successfully added to train ##{train.num}"
   else
-    train = @trains[train_num]
-    success = false
-    @cars.each do |car| 
-      if car.detached && train.type == car.type
-        train.add_car(car)
-        success = true
-        break 
-      end
-    end
-    if success
-      puts "A car was successfully added to train ##{train_num}"
-    else
-      puts "There are no cars of this type available, please create new ones or detach from other trains."
-    end
+    puts "There are no cars of this type available, please create new ones or detach from other trains."
   end
 end
 
 def detach_car
   puts "Let's detach a car from a train. Please enter the train number:"
-  num = gets.chomp
-  if !@trains[num]
-    puts "There is no train with this number."
-  else
-    @trains[num].remove_car
-    puts "Done"
-  end
+  train = get_train_from_user
+  return if !train
+  train.remove_car
+  puts "Done"
 end
 
 def assign_route
   puts "Let's assign a route to train. Please enter the train number:"
-  train_num = gets.chomp
-  if !@trains[train_num]
-    puts "There is no train with this number"
-  elsif @routes.empty?
+  train = get_train_from_user
+  return if !train
+  if @routes.empty?
     puts "There are no routes available. Please create a route first."
   else
-    puts "The following @routes are available:"
+    puts "The following routes are available:"
     @routes.each_with_index do |route, index|
       print index.to_s + ": "
       route.print_text  
@@ -184,7 +185,7 @@ def assign_route
     puts "Please select the route by entering its number:"
     route_num = gets.chomp.to_i
     if route_num >= 0 && route_num < @routes.size
-      @trains[train_num].assign_route(@routes[route_num])
+      train.assign_route(@routes[route_num])
       puts "Done"
     else
       puts "Error: the route number is out of range."
@@ -194,60 +195,51 @@ end
 
 def move_along_route
   puts "Let's move a train along its route. Please enter the train number:"
-  train_num = gets.chomp
-  if !@trains[train_num]
-    puts "There is no train with this number."
-  else 
-    train = @trains[train_num]
-    if train.at_station
-      train.print_current_station
-      puts "Move forward (f) or backward (b)?"
-      direction = gets.chomp
-      if ["F","FORWARD"].include?(direction.upcase)
-        train.depart_forward
-        train.print_next_station
-      elsif ["B", "BACKWARD"].include?(direction.upcase)
-        train.depart_backward
-        train.print_prev_station
-      end
-    else
-      puts "The train is currently moving. Should it arrive to the station (yes/no)?"
-      answer = gets.chomp
-      if ["Y","YES"].include?(answer.upcase)
-        train.arrive
-        train.print_current_station
-      end
+  train = get_train_from_user
+  return if !train
+  if train.at_station
+    train.print_current_station
+    puts "Move forward (f) or backward (b)?"
+    direction = gets.chomp
+    if ["F","FORWARD"].include?(direction.upcase)
+      train.depart_forward
+      train.print_next_station
+    elsif ["B", "BACKWARD"].include?(direction.upcase)
+      train.depart_backward
+      train.print_prev_station
     end
-  end    
+  else
+    puts "The train is currently moving. Should it arrive to the station (yes/no)?"
+    answer = gets.chomp
+    if ["Y","YES"].include?(answer.upcase)
+      train.arrive
+      train.print_current_station
+    end
+  end
 end
 
 def move_to_station
   puts "Let's move a train directly to a particular station. Enter the train number:"
-  train_num = gets.chomp
+  train = get_train_from_user
+  return if !train
   puts "Enter the station name:"
   station = get_station_from_user  
   return if !station
-  if @trains[train_num] && station
-    @trains[train_num].move_directly(station)
-    @trains[train_num].print_current_station
-  else
-    puts "Error: such station or train doesn't exist"
-  end
+  train.move_directly(station)
+  train.print_current_station
 end
 
 def cargo_load_unload      
   puts "Let's load/unload a cargo car. Please enter the train number:"
-  train_num = gets.chomp
-  if !@trains[train_num]
-    puts "There is no train with this number."
-  elsif @trains[train_num].type != :cargo
-    puts "Train #{train_num} is not a cargo train"
+  train = get_train_from_user
+  return if !train
+  if train.type != :cargo
+    puts "Train ##{train.num} is not a cargo train"
   else
     puts "Enter the car number:"
     car_num = gets.chomp.to_i
-    train = @trains[train_num]
     if train.num_cars < car_num
-      puts "There are only #{train.num_cars} cars in train ##{train_num}."
+      puts "There are only #{train.num_cars} cars in train ##{train.num}."
     else
       puts "Load (l) or unload (u)?"
       answer = gets.chomp
@@ -271,17 +263,14 @@ end
  
 def passenger_on_off 
   puts "Let's deal with seats in passenger trains. Enter the train number:"
-  train_num = gets.chomp
-  if !@trains[train_num]
-    puts "There is no train with this number."
-  elsif @trains[train_num].type != :passenger
-    puts "Train ##{train_num} is not a passenger train"
+  train = get_train_from_user
+  if train.type != :passenger
+    puts "Train ##{train.num} is not a passenger train"
   else
     puts "Enter the car number:"
     car_num = gets.chomp.to_i
-    train = @trains[train_num]
     if train.num_cars < car_num
-      puts "Train ##{train_num} has only #{train.num_cars} cars."
+      puts "Train ##{train.num} has only #{train.num_cars} cars."
     else
       puts "Do you want to occupy (o) or release (r) a seat?"
       answer = gets.chomp
@@ -319,14 +308,13 @@ def print_routes
     end
   end     
 end
-
 def print_trains
-  if @trains.empty?
+  if Train.none?
     puts "There are no trains. You may want to create them first."
   else
     puts "The full list of trains is below:"
     puts "#{"Number".center(14)}|#{"Type".center(16)}|#{"Number of cars".center(16)}"
-    @trains.each do |key,value| 
+    Train.all_trains.each do |key,value| 
       puts "#{key.center(14)}|#{value.type.to_s.center(16)}|#{value.num_cars.to_s.center(16)}"
     end
   end

@@ -6,8 +6,16 @@ class Train
 
   @@all_trains = {}
 
+  def self.all_trains
+    @@all_trains
+  end
+ 
   def self.get_by_number(num)
     train = @@all_trains[num]
+  end
+
+  def self.none?
+    @@all_trains == {}
   end
  
   def initialize (num, type)
