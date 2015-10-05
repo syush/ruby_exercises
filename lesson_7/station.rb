@@ -1,9 +1,17 @@
 require_relative 'train'
 
 class Station
+  
+  @@all_stations = []
+
+  def self.print_all
+    @@all_stations.each {|name| puts name}
+  end
+  
   def initialize (name)
     @name = name
     @train_list = []
+    @@all_stations << name
   end
  
   attr_reader :name

@@ -300,7 +300,7 @@ def print_stations
     puts "There are no stations currently. You may want to create them first."
   else
     puts "The total station list is below:"
-    @stations.each {|key,value| puts key}
+    Station.print_all    
   end
 end
 
