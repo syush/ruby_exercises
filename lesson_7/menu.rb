@@ -40,14 +40,15 @@ def main_menu
     puts "Choose a menu item by typing its number:"
     menu_items.each_with_index {|item, i| puts "#{i+1}: #{item[:text]}" }
     puts "0: Exit the program"
-    choice = gets.chomp.to_i
-    if choice == 0
+    choice = gets.chomp
+    choice_i = choice.to_i
+    if choice == "0"
       puts "Bye!"
       break
-    elsif (choice > 0) && (choice <= menu_items.size)
-      menu_items[choice-1][:link].call
+    elsif (choice_i > 0) && (choice_i <= menu_items.size)
+      menu_items[choice_i - 1][:link].call
     else
-     puts "Wrong menu choice; please try again."
+      puts "Wrong menu choice; please try again."
     end
     puts
     puts "Press ENTER to return to the main menu..."
