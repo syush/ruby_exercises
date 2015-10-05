@@ -69,17 +69,12 @@ def find_station(name)
   station
 end
 
-def get_station_from_user
-  name = gets.chomp
-  find_station(name)
-end
-
 def create_route
   puts "Let's create a route. Please enter the start station:"
-  start = get_station_from_user
+  start = get_from_user(:station)
   return if !start
   puts "Please enter the final destination:"
-  final = get_station_from_user
+  final = get_from_user(:station)
   return if !final  
   new_route = Route.new(start, final)
   @routes << new_route
@@ -137,14 +132,19 @@ def find_train(num)
   train
 end
 
-def get_train_from_user
-  num = gets.chomp
-  find_train(num)
+def get_from_user(item)
+  key = gets.chomp
+  case item 
+  when :train 
+    return find_train(key)
+  when :station
+    return find_station(key)
+  end
 end
 
 def attach_car
   puts "Let's attach a car to a train. Please enter the train number:"
-  train = get_train_from_user
+  train = get_from_user(:train)
   return if !train
   success = false
   @cars.each do |car| 
@@ -163,7 +163,7 @@ end
 
 def detach_car
   puts "Let's detach a car from a train. Please enter the train number:"
-  train = get_train_from_user
+  train = get_from_user(:train)
   return if !train
   train.remove_car
   puts "Done"
@@ -171,7 +171,7 @@ end
 
 def assign_route
   puts "Let's assign a route to train. Please enter the train number:"
-  train = get_train_from_user
+  train = get_from_user(:train)
   return if !train
   if @routes.empty?
     puts "There are no routes available. Please create a route first."
@@ -195,7 +195,7 @@ end
 
 def move_along_route
   puts "Let's move a train along its route. Please enter the train number:"
-  train = get_train_from_user
+  train = get_from_user(:train)
   return if !train
   if train.at_station
     train.print_current_station
@@ -220,10 +220,10 @@ end
 
 def move_to_station
   puts "Let's move a train directly to a particular station. Enter the train number:"
-  train = get_train_from_user
+  train = get_from_user(:train)
   return if !train
   puts "Enter the station name:"
-  station = get_station_from_user  
+  station = get_from_user(:station)  
   return if !station
   train.move_directly(station)
   train.print_current_station
@@ -231,7 +231,7 @@ end
 
 def cargo_load_unload      
   puts "Let's load/unload a cargo car. Please enter the train number:"
-  train = get_train_from_user
+  train = get_from_user(:train)
   return if !train
   if train.type != :cargo
     puts "Train ##{train.num} is not a cargo train"
@@ -263,7 +263,7 @@ end
  
 def passenger_on_off 
   puts "Let's deal with seats in passenger trains. Enter the train number:"
-  train = get_train_from_user
+  train = get_from_user(:train)
   if train.type != :passenger
     puts "Train ##{train.num} is not a passenger train"
   else
@@ -308,6 +308,7 @@ def print_routes
     end
   end     
 end
+
 def print_trains
   if Train.none?
     puts "There are no trains. You may want to create them first."
@@ -322,7 +323,7 @@ end
 
 def print_trains_at_station
   puts "Please enter the station name:"
-  station = get_station_from_user 
+  station = get_from_user(:station) 
   return if !station
   station.print_trains
 end
