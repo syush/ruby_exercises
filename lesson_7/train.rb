@@ -4,10 +4,17 @@ require_relative 'producer'
 
 class Train
 
+  @@all_trains = {}
+
+  def self.get_train_by_number(num)
+    train = @@all_trains[num]
+  end
+ 
   def initialize (num, type)
     init_num(num)
     init_type(type)
     init_defaults
+    @@all_trains[num] = self
   end
 
   include Producer

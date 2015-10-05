@@ -322,8 +322,10 @@ def print_trains
     puts "There are no trains. You may want to create them first."
   else
     puts "The full list of trains is below:"
-    puts "    Number    |      Type      | Number of cars"
-    @trains.each {|key,value| puts "#{key.center(14)}|#{value.type.to_s.center(16)}| #{value.num_cars.to_s.center(16)}"}
+    puts "#{"Number".center(14)}|#{"Type".center(16)}|#{"Number of cars".center(16)}"
+    @trains.each do |key,value| 
+      puts "#{key.center(14)}|#{value.type.to_s.center(16)}|#{value.num_cars.to_s.center(16)}"
+    end
   end
 end
 
