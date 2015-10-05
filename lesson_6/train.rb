@@ -3,7 +3,7 @@ require_relative 'route'
 
 class Train
 
-  def initialize (num, type=:passenger)
+  def initialize (num, type)
     init_num(num)
     init_type(type)
     init_defaults
