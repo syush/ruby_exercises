@@ -10,7 +10,6 @@ require_relative 'cargo_train'
 class Menu
 
 def initialize
-  @stations = {}
   @trains = {}
   @cars = []
   @routes = []
@@ -62,35 +61,38 @@ def create_station
   puts "Let's create a new station. Please enter its name:"
   name = gets.chomp
   new_station = Station.new(name)
-  @stations[name] = new_station
   puts "Station #{name} was successfully created."
+end
+
+def find_station(name)
+  station = Station.get_by_name(name)
+  puts "There is no station named #{name}. Please create a station first." if !station
+  station
+end
+
+def get_station_from_user
+  name = gets.chomp
+  find_station(name)
 end
 
 def create_route
   puts "Let's create a route. Please enter the start station:"
-  start = gets.chomp
-  if !@stations[start] 
-    puts "There is no such station. Please create a station first."
-  else
-    puts "Please enter the final destination:"
-    final = gets.chomp
-    if !@stations[final]
-      puts "There is no such station. Please create a station first."
-    else
-      new_route = Route.new(@stations[start], @stations[final])
-      @routes << new_route
-      current = @stations[start]
-      loop do
-        puts "If you want to add a stop next after #{current.name}, enter its name, or type 'done' if there are no more stops."
-        stop = gets.chomp
-        break if stop == "done"
-        if !@stations[stop]
-          puts "There is no such station. Please create a station first."
-        else
-          new_route.add_station(@stations[stop], current)
-          current = @stations[stop]
-        end
-      end
+  start = get_station_from_user
+  return if !start
+  puts "Please enter the final destination:"
+  final = get_station_from_user
+  return if !final  
+  new_route = Route.new(start, final)
+  @routes << new_route
+  current = start
+  loop do
+    puts "If you want to add a stop next after #{current.name}, enter its name, or type 'done' if there are no more stops."
+    input = gets.chomp
+    break if input.upcase == "DONE"
+    next_stop = find_station(input)
+    if next_stop
+      new_route.add_station(next_stop, current)
+      current = next_stop
     end
   end
 end
@@ -223,9 +225,10 @@ def move_to_station
   puts "Let's move a train directly to a particular station. Enter the train number:"
   train_num = gets.chomp
   puts "Enter the station name:"
-  station_name = gets.chomp
-  if @trains[train_num] && @stations[station_name]
-    @trains[train_num].move_directly(@stations[station_name])
+  station = get_station_from_user  
+  return if !station
+  if @trains[train_num] && station
+    @trains[train_num].move_directly(station)
     @trains[train_num].print_current_station
   else
     puts "Error: such station or train doesn't exist"
@@ -297,7 +300,7 @@ def passenger_on_off
 end
 
 def print_stations 
-  if @stations.empty?
+  if Station.none?
     puts "There are no stations currently. You may want to create them first."
   else
     puts "The total station list is below:"
@@ -331,12 +334,9 @@ end
 
 def print_trains_at_station
   puts "Please enter the station name:"
-  name = gets.chomp
-  if !@stations[name]
-    puts "There is no such station."
-  else
-    @stations[name].print_trains
-  end
+  station = get_station_from_user 
+  return if !station
+  station.print_trains
 end
 
 def print_cars

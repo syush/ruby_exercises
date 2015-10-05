@@ -6,7 +6,7 @@ class Train
 
   @@all_trains = {}
 
-  def self.get_train_by_number(num)
+  def self.get_by_number(num)
     train = @@all_trains[num]
   end
  
