@@ -1,5 +1,6 @@
 require_relative 'station'
 require_relative 'route'
+require_relative 'producer'
 
 class Train
 
@@ -8,6 +9,8 @@ class Train
     init_type(type)
     init_defaults
   end
+
+  include Producer
 
   attr_reader :num
   attr_reader :type
