@@ -1,8 +1,12 @@
 require_relative 'station'
 require_relative 'route'
 require_relative 'producer'
+require_relative 'instance_counter'
 
 class Train
+
+  include InstanceCounter
+  extend InstanceCounter
 
   @@all_trains = {}
 
@@ -23,6 +27,7 @@ class Train
     init_type(type)
     init_defaults
     @@all_trains[num] = self
+    register_instance
   end
 
   include Producer

@@ -1,9 +1,14 @@
 require_relative 'station'
+require_relative 'instance_counter'
 
 class Route
+
+  include InstanceCounter
+  include InstanceCounter
   def initialize(first, last)
     @list = [first, last]
     @cur_index = 0
+    register_instance
   end
 
   def add_station(new_station, prev_station)

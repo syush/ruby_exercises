@@ -289,6 +289,7 @@ def passenger_on_off
 end
 
 def print_stations 
+  puts "Instance counter reports #{Station.instances} stations."
   if Station.none?
     puts "There are no stations currently. You may want to create them first."
   else
@@ -298,6 +299,7 @@ def print_stations
 end
 
 def print_routes
+  puts "Instance counter reports #{Route.instances} routes."
   if @routes.empty?
     puts "There are no routes currently. You may want to create them."
   else
@@ -310,6 +312,9 @@ def print_routes
 end
 
 def print_trains
+  puts "Instance counter for trains equals #{Train.instances}."
+  puts "Instance counter for passenger trains equals #{PassengerTrain.instances}."
+  puts "Instance counter for cargo trains equals #{CargoTrain.instances}."
   if Train.none?
     puts "There are no trains. You may want to create them first."
   else
@@ -329,6 +334,7 @@ def print_trains_at_station
 end
 
 def print_cars
+  puts "Instance counter reports #{Car.instances} cars, #{CargoCar.instances} cargo cars, #{PassengerCar.instances} passenger cars."
   total_cargo = 0
   total_passenger = 0
   detached_cargo = 0

@@ -1,6 +1,10 @@
 require_relative 'train'
+require_relative 'instance_counter'
 
 class Station
+
+  include InstanceCounter
+  extend InstanceCounter
   
   @@all_stations = {} 
 
@@ -20,6 +24,7 @@ class Station
     @name = name
     @train_list = []
     @@all_stations[name] = self 
+    register_instance
   end
  
   attr_reader :name
