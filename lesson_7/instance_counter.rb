@@ -9,6 +9,8 @@ def increase_counter
   @instance_counter = @instance_counter ? @instance_counter + 1 : 1 
 end
 
+private
+
 def register_instance
   self.class.increase_counter
 end
