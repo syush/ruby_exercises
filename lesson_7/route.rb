@@ -4,7 +4,6 @@ require_relative 'instance_counter'
 class Route
 
   include InstanceCounter
-  include InstanceCounter
   def initialize(first, last)
     @list = [first, last]
     @cur_index = 0

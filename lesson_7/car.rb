@@ -4,7 +4,6 @@ require_relative 'instance_counter'
 class Car
 
   include InstanceCounter
-  extend InstanceCounter
   def initialize(seats_or_load)
     @num = 0
     @train = nil

@@ -6,7 +6,6 @@ require_relative 'instance_counter'
 class Train
 
   include InstanceCounter
-  extend InstanceCounter
 
   @@all_trains = {}
 
@@ -40,7 +39,7 @@ class Train
 
   def speed_up
     if @speed > 100
-      puts "Error: train ##{@num} can't speed up since it's moving at max speed" if @speed == 110
+      puts "Error: train ##{@num} can't speed up since it's moving at max speed" 
     else
       @speed += 10 
     end  
