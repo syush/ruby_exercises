@@ -15,6 +15,8 @@ class Route
 
   def add_station(new_station, prev_station)
     raise ProtectionError, "Invalid station #{new_station.name} trying to be inserted to the route" if !new_station.valid?
+    raise ProtectionError, "Route doesn't contain station #{prev_station.name}" if !@list.include?(prev_station)
+    raise ProhibitionError, "Route already contains station #{new_station.name}" if @list.include?(new_station)
     @list.insert(@list.index(prev_station) + 1, new_station)
   end
   
@@ -67,6 +69,7 @@ private
 
   def validate!
     @list.each {|station| raise ProtectionError, "Invalid station #{station.name} added to route" if !station.valid?}
+    raise ProtectionError, "Start and final stations are the same station." if @list.first == @list.last
   end
 
 end

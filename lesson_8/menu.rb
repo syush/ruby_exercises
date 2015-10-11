@@ -98,12 +98,23 @@ def create_route
   @routes << new_route
   current = start
   loop do
-    puts "If you want to add a stop next after #{current.name}, enter its name, or type 'done' if there are no more stops."
-    input = gets.chomp
-    break if input.upcase == "DONE"
-    next_stop = find_station(input)
-    new_route.add_station(next_stop, current)
-    current = next_stop
+    begin
+      puts "If you want to add a stop next after #{current.name}, enter its name, or type 'done' if there are no more stops."
+      input = gets.chomp
+      break if input.upcase == "DONE"
+      next_stop = find_station(input)
+      new_route.add_station(next_stop, current)
+      current = next_stop
+    rescue InputError
+      puts "Please be careful with entering station names."
+      puts "Please try again"
+      retry
+    rescue ProhibitionError => e
+      puts "The following problem appeared:"
+      puts e.message
+      puts "Please try again"
+      retry
+    end
   end
 end
 
