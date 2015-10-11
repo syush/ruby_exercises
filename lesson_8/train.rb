@@ -176,6 +176,7 @@ protected
   def validate!
     raise ProtectionError, "Wrong train format" if !self.class.correct_num_format?(@num)
     raise ProtectionError, "Unknown train type" if !correct_type?(@type)
+    raise ProhibitionError, "Train with this number already exists" if self.class.get_by_number(@num)    
   end  
 
 end
