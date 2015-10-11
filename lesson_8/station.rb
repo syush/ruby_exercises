@@ -1,10 +1,24 @@
 require_relative 'train'
 require_relative 'instance_counter'
+require_relative 'exceptions'
+
 
 class Station
 
   include InstanceCounter
   
+  def initialize (name)
+    @name = name
+    validate!
+    @train_list = []
+    @@all_stations[name] = self 
+    register_instance
+  end
+
+  def valid?
+    self.class.valid_name?(@name)
+  end
+ 
   @@all_stations = {} 
 
   def self.print_all
@@ -18,22 +32,21 @@ class Station
   def self.none?
     @@all_stations == {}
   end
-  
-  def initialize (name)
-    @name = name
-    @train_list = []
-    @@all_stations[name] = self 
-    register_instance
-  end
  
+  def self.valid_name?(name)
+    latin_name = true if  name =~/\A([A-Z]([A-Z]*|[a-z]*)|\d+)(( |-)([A-Z]?([A-Z]*|[a-z]*)|d+))*\z/ 
+    cyrillic_name = true if  name =~/\A([А-Я]([А-Я]*|[а-я]*)|\d+)(( |-)([А-Я]?([А-Я]*|[а-я]*)|d+))*\z/ 
+    latin_name || cyrillic_name
+  end
+
+ 
+
   attr_reader :name
   
-  def accept_train (train)
-    if @train_list.include?(train)
-      puts "Error: station #{@name} trying to accept train ##{train.num} which is already there"
-    else
-      @train_list << train
-    end
+  def accept_train (train)  
+    raise ProhibitionError, "Station #{@name} trying to accept train ##{train.num} which is already there" if @train_list.include?(train)
+    raise ProtectionError, "Invalid train #{train.num} requests acceptance by station #{@name}" if !train.valid?
+    @train_list << train
   end
 
   def print_trains
@@ -60,12 +73,16 @@ class Station
   end
 
   def release_train (train)
-    if @train_list.include?(train)
-      @train_list.delete(train)
-    else
-      puts "Error: station #{@name} trying to release train ##{train.num} which is not there"
-    end
+    raise ProhibitionError, "Station #{@name} trying to release train ##{train.num} which is not there" if !@train_list.include?(train)
+    @train_list.delete(train)
   end     
+
+protected
+  
+  def validate! 
+    raise ProtectionError, "Strange station name" if !self.class.valid_name?(@name)
+  end
+
 end
 
 

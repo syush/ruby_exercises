@@ -1,29 +1,26 @@
 require_relative 'station'
 require_relative 'instance_counter'
+require_relative 'exceptions'
+
 
 class Route
 
   include InstanceCounter
   def initialize(first, last)
     @list = [first, last]
+    validate!
     @cur_index = 0
     register_instance
   end
 
   def add_station(new_station, prev_station)
-    if @list.include?(prev_station)
-      @list.insert(@list.index(prev_station) + 1, new_station)
-    else
-      puts "Error: can't insert #{new_station.name} since the route doesn't contain #{prev_station.name}"
-    end
+    raise ProtectionError, "Invalid station #{new_station.name} trying to be inserted to the route" if !new_station.valid?
+    @list.insert(@list.index(prev_station) + 1, new_station)
   end
   
   def remove_station(station)
-    if @list.include?(station)
-      @list.delete(station)
-    else
-      puts "Error: can't remove #{station.name} from the route since it's not there"
-    end
+    raise ProhibitionError, "Can't remove #{station.name} from the route since it's not there"  if @list.include?(station)
+    @list.delete(station)
   end
 
   def first
@@ -43,10 +40,12 @@ class Route
   end
 
   def next(station)
+    raise ProhibitionError, "Station #{station.name} is not on the route" if !@list.include?(station)
     @list[@list.index(station) + 1]
   end
 
   def prev(station)
+    raise ProhibitionError, "Station #{station.name} is not on the route" if !@list.include?(station)
     @list[@list.index(station) - 1]
   end
 
@@ -59,4 +58,15 @@ class Route
     @list.each {|station| text += "-" + station.name + "-"}
     print text
   end
+
+  def valid?
+    true
+  end
+
+private
+
+  def validate!
+    @list.each {|station| raise ProtectionError, "Invalid station #{station.name} added to route" if !station.valid?}
+  end
+
 end

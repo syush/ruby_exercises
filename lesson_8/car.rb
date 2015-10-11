@@ -1,5 +1,6 @@
 require_relative 'producer'
 require_relative 'instance_counter'
+require_relative 'exceptions'
 
 class Car
 
@@ -13,8 +14,14 @@ class Car
   include Producer
   
   attr_reader :type
+
+  def valid?
+    @num >= 0
+  end
  
   def attach(train, num)
+    raise ProtectionError, "Car attachted to invalid train ##{train.num}" if !train.valid?
+    raise ProtectionError, "Car was assigned non-positive number #{num}" if num <= 0
     @num = num
     @train = train    
   end

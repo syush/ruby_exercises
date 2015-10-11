@@ -2,10 +2,24 @@ require_relative 'station'
 require_relative 'route'
 require_relative 'producer'
 require_relative 'instance_counter'
+require_relative 'exceptions'
 
 class Train
 
   include InstanceCounter
+
+  def initialize (num, type)
+    @num = num
+    @type = type
+    validate!
+    init_defaults
+    @@all_trains[num] = self
+    register_instance
+  end
+
+  def valid?
+    self.class.correct_num_format?(@num) && correct_type?(@type)
+  end
 
   @@all_trains = {}
 
@@ -21,116 +35,88 @@ class Train
     @@all_trains == {}
   end
  
-  def initialize (num, type)
-    init_num(num)
-    init_type(type)
-    init_defaults
-    @@all_trains[num] = self
-    register_instance
+  def self.correct_num_format?(num)
+    num =~/\A[a-zа-я0-9]{3}-?[a-zа-я0-9]{2}\z/i
   end
+
 
   include Producer
 
   attr_reader :num
   attr_reader :type
-  attr_reader :num_cars
   attr_reader :at_station
   attr_reader :cars
 
   def speed_up
-    if @speed > 100
-      puts "Error: train ##{@num} can't speed up since it's moving at max speed" 
-    else
-      @speed += 10 
-    end  
+    raise ProhibitionError, "Train ##{@num} can't speed up since it's moving at max speed"  if @speed > 100 
+    @speed += 10 
   end
    
   def print_speed
     if @speed > 0
-      puts "Train ##{@num} is moving at speed #{@speed} km/h"
+      puts "Train ##{@num} is moving at speed #{@speed} km/h" 
     else
       puts "Train ##{@num} is not moving"
     end
   end
 
   def slow_down
-    if @speed < 10
-      puts "Error: train ##{@num} can't slow down since it is not moving" if @speed == 0
-    else
-      @speed -= 10
-    end
+    raise ProhibitionError, "Train ##{@num} can't slow down since it is not moving" if @speed == 0
+    @speed -= 10
   end
 
   def add_car(car)
-    if @speed > 0
-      puts "Error: can't add a car to train ##{@num} since it is moving"
-    elsif car.type != @type
-      puts "Error: can't attach a #{car.type} car to a #{@type} train"
-    else
-      @num_cars += 1
-      @cars << car
-      car.attach(self, @num_cars)
-    end
+    raise ProhibitionError, "Can't add a car to train ##{@num} since it is moving"  if @speed > 0
+    raise ProtectionError, "Can't attach a #{car.type} car to #{@type} train ##{@num}" if car.type != @type
+    raise ProtectionError, "Invalid car trying to be attached to train ##{@num}" if !car.valid?
+    @cars << car
+    car.attach(self, @cars.size)
   end
 
   def remove_car
-    if @speed == 0
-      if @num_cars > 0
-        @cars.last.detach
-        @cars.pop
-        @num_cars -= 1
-      else
-        puts "Error: can't remove a car; train ##{@num} is just a bare locomotive"
-      end
-    else
-      puts "Error: can't remove a car from train ##{@num} since it is moving"
-    end
+    raise ProhibitionError, "Can't remove a car; train ##{@num} is just a bare locomotive" if @cars.empty? 
+    raise ProhibitionError, "Can't remove a car from train ##{@num} since it is moving"  if @speed > 0
+    @cars.last.detach
+    @cars.pop
   end
 
   def print_num_cars
-    puts "Train ##{@num} has #{@num_cars} cars."
+    puts "Train ##{@num} has #{@cars.size} cars."
   end
-   
+  
+  def num_cars
+    @cars.size
+  end
+ 
   def arrive
-    if @at_station
-      puts "Error: train ##{@num} is already at station #{@station.name}"
-    else
-      @station.accept_train(self)
-      @at_station = true
-    end
+    raise ProhibitionError, "No route has been assigned to train ##{@num}" if !@route
+    raise ProhibitionError, "Train ##{@num} is already at station #{@station.name}"  if @at_station
+    @station.accept_train(self)
+    @at_station = true
   end
 
   def depart_forward
-    if @at_station
-      if @route && @route.last?(@station)
-        puts "Error: train ##{@num} is at the final destination; can't move forward."
-      elsif @route
-        @station.release_train(self)
-        @at_station = false
-        @forward = true
-        @station = @route.next(@station)
-      end
-    else
-      puts "Error: train ##{@num} can't depart because it is not at a station."
-    end
+    raise ProhibitionError, "No route has been assigned to train ##{@num}" if !@route
+    raise ProhibitionError, "Train ##{@num} can't depart because it is not at a station." if !@at_station || !@station
+    raise ProhibitionError, "Train ##{@num} is at the final destination; can't move forward." if @route.last?(@station)
+    @station.release_train(self)
+    @at_station = false
+    @forward = true
+    @station = @route.next(@station)
   end
   
   def depart_backward
-    if @at_station
-      if @route && @route.first?(@station)
-        puts "Error: train ##{@num} is at the starting point; can't move backward."
-      elsif @route
-        @station.release_train(self)
-        @at_station = false
-        @forward = false
-        @station = @route.prev(@station)
-      end
-    else
-      puts "Error: train ##{@num} can't depart because it is not at a station."
-    end
+    raise ProhibitionError, "No route has been assigned to train ##{@num}" if !@route
+    raise ProhibitionError, "Train ##{@num} can't depart because it is not at a station." if !@at_station || !@station
+    raise ProhibitionError, "Train ##{@num} is at the starting point; can't move backward." if @route.first?(@station)
+    @station.release_train(self)
+    @at_station = false
+    @forward = false
+    @station = @route.prev(@station)
   end
 
   def move_directly(station)
+    raise ProtectionError, "Train ##{@num} is directed to invalid station #{station.name}" if !station.valid?
     @station.release_train(self) if @at_station
     @at_station = true
     @station = station
@@ -138,17 +124,12 @@ class Train
   end
 
   def assign_route(route)
-    if @station && @at_station
-      if route.include?(@station)
-        @route = route
-      else
-        puts "Error: before assigning the route, train ##{@num} must leave #{@station.name} which is not on the route."
-      end
-    else
-      @route = route
-      @station = @route.first
-      @at_station = false
+    raise ProtectionError, "Invalid route is assigned to train ##{@num}" if !route.valid?
+    if @station && @at_station && !route.include?(@station)
+      raise ProhibitionError, "Before assigning the route, train ##{@num} must leave #{@station.name} which is not on the route."
     end
+    @route = route
+    @station = @route.first if !@at_station
   end
 
   def print_current_station
@@ -179,19 +160,6 @@ class Train
  
 protected
 
-  def init_num(num)
-    @num = num
-  end
-
-  def init_type(type)
-    if ([ :cargo, :passenger]).include?(type)
-      @type = type
-    else
-      puts "Error: unknown train type"
-      @type = :passenger
-    end
-  end
-
   def init_defaults
     @speed = 0
     @station = nil
@@ -199,8 +167,16 @@ protected
     @at_station = false
     @route = nil
     @cars = []
-    @num_cars = 0
   end
+
+  def correct_type?(type)
+    [:cargo,:passenger].include?(@type)
+  end
+
+  def validate!
+    raise ProtectionError, "Wrong train format" if !self.class.correct_num_format?(@num)
+    raise ProtectionError, "Unknown train type" if !correct_type?(@type)
+  end  
 
 end
 
