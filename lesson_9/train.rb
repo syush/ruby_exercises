@@ -47,6 +47,11 @@ class Train
   attr_reader :at_station
   attr_reader :cars
 
+  
+  def each_car
+    @cars.each {|car| yield(car)}
+  end
+
   def speed_up
     raise ProhibitionError, "Train ##{@num} can't speed up since it's moving at max speed"  if @speed > 100 
     @speed += 10 
@@ -63,6 +68,10 @@ class Train
   def slow_down
     raise ProhibitionError, "Train ##{@num} can't slow down since it is not moving" if @speed == 0
     @speed -= 10
+  end
+
+  def stop
+    @speed = 0
   end
 
   def add_car(car)

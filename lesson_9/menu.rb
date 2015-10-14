@@ -21,17 +21,21 @@ def main_menu
                 {text:"Create a route",link:method(:create_route)},
                 {text:"Create a car",link:method(:create_car)}, 
                 {text:"Create a train",link:method(:create_train)},
+                {text:"Stop all trains at a station",link:method(:stop_all_trains)},
                 {text:"Attach a car to a train",link:method(:attach_car)},
                 {text:"Detach a car from a train",link:method(:detach_car)},
+                {text:"Change speed of a train",link:method(:change_speed)},
                 {text:"Assign a route to a train",link:method(:assign_route)},
                 {text:"Move a train along its route",link:method(:move_along_route)},
                 {text:"Move a train directly to a particular station",link:method(:move_to_station)},
                 {text:"Load/unload a cargo car",link:method(:cargo_load_unload)},
                 {text:"Occupy/release a seat in a passenger car",link:method(:passenger_on_off)},
+                {text:"Print free seats in a train",link:method(:print_free_seats)},
                 {text:"Show the list of stations",link:method(:print_stations)},
                 {text:"Show the list of routes",link:method(:print_routes)},
                 {text:"Show the list of trains",link:method(:print_trains)},
                 {text:"Show trains at a particular station",link:method(:print_trains_at_station)},
+                {text:"Print the speed of each train",link:method(:print_speeds)},
                 {text:"Show the number of cars",link:method(:print_cars)} ]
   loop do
     puts 
@@ -170,6 +174,13 @@ def get_from_user(item)
   end
 end
 
+def stop_all_trains
+  puts "Let's slow down all trains which are currently at a specific station. Enter the station name:"
+  station = get_from_user(:station)
+  station.each_train {|train| train.stop}
+  puts "Done"
+end
+
 def attach_car
   puts "Let's attach a car to a train. Please enter the train number:"
   train = get_from_user(:train)
@@ -244,6 +255,21 @@ def move_to_station
   train.print_current_station
 end
 
+def change_speed
+  puts "Let's change the speed of a train. Please enter the train number:"
+  train = get_from_user(:train)
+  train.print_speed
+  puts "Speed UP (u) or slow DOWN (d)?"
+  answer=gets.chomp
+  if ['U','UP','SPEEDUP','SPEED UP'].include?(answer.upcase)
+    train.speed_up
+  elsif ['D','DOWN','SLOWDOWN','SLOW DOWN'].include?(answer.upcase)
+    train.slow_down
+  else
+    raise InputError "I don't understand you"
+  end
+end
+
 def select_car(train)
   raise ProhibitionError, "Train ##{train.num} doesn't contain any cars." if train.num_cars == 0
   puts "Train ##{train.num} contains #{train.num_cars} cars currently."
@@ -295,41 +321,47 @@ def passenger_on_off
   end
 end
 
+def print_free_seats
+  puts "Please enter the train number to print out the list of free seats in it:"
+  train = get_from_user(:train)
+  raise ProhibitionError, "Train ##{train.num} is not a passenger train" if train.type != :passenger
+  raise ProhibitionError, "There are no cars in train ##{train.num}" if train.num_cars < 1
+  puts "Free seats in train ##{train.num}:"
+  puts "   Car #  | # of free seats"
+  c = 0
+  train.each_car do |car|
+    c += car.free_seats
+    puts "#{car.num.to_s.center(10)}|#{car.free_seats.to_s.center(13)}"
+  end
+  puts "Total: #{c} free seats in train ##{train.num}"
+end
+
 def print_stations 
   puts "Instance counter reports #{Station.instances} stations."
-  if Station.none?
-    puts "There are no stations currently. You may want to create them first."
-  else
-    puts "The total station list is below:"
-    Station.print_all    
-  end
+  raise ProhibitionError, "There are no stations currently. You may want to create them first." if Station.none?
+  puts "The total station list is below:"
+  Station.print_all    
 end
 
 def print_routes
   puts "Instance counter reports #{Route.instances} routes."
-  if @routes.empty?
-    puts "There are no routes currently. You may want to create them."
-  else
-    puts "The total list of routes is below:"
-    @routes.each do |route| 
-      route.print_text   
-      puts
-    end
-  end     
+  raise ProhibitionError, "There are no routes currently. You may want to create them." if @routes.empty?
+  puts "The total list of routes is below:"
+  @routes.each do |route| 
+    route.print_text   
+    puts
+  end
 end
 
 def print_trains
   puts "Instance counter for trains equals #{Train.instances}."
   puts "Instance counter for passenger trains equals #{PassengerTrain.instances}."
   puts "Instance counter for cargo trains equals #{CargoTrain.instances}."
-  if Train.none?
-    puts "There are no trains. You may want to create them first."
-  else
-    puts "The full list of trains is below:"
-    puts "#{"Number".center(14)}|#{"Type".center(16)}|#{"Number of cars".center(16)}"
-    Train.all_trains.each do |key,value| 
-      puts "#{key.center(14)}|#{value.type.to_s.center(16)}|#{value.num_cars.to_s.center(16)}"
-    end
+  raise ProhibitionError, "There are no trains. You may want to create them first." if Train.none?
+  puts "The full list of trains is below:"
+  puts "#{"Number".center(14)}|#{"Type".center(16)}|#{"Number of cars".center(16)}"
+  Train.all_trains.each do |key,value| 
+    puts "#{key.center(14)}|#{value.type.to_s.center(16)}|#{value.num_cars.to_s.center(16)}"
   end
 end
 
@@ -337,6 +369,12 @@ def print_trains_at_station
   puts "Please enter the station name:"
   station = get_from_user(:station) 
   station.print_trains
+end
+
+def print_speeds
+  raise ProhibitionError, "There are no trains. You may want to create them first." if Train.none?
+  puts "The current speed of all existing trains is shown below:"
+  Train.all_trains.each {|key,value|value.print_speed}
 end
 
 def print_cars

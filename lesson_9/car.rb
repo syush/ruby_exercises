@@ -14,6 +14,7 @@ class Car
   include Producer
   
   attr_reader :type
+  attr_reader :num
 
   def valid?
     @num >= 0

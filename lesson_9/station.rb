@@ -39,10 +39,12 @@ class Station
     latin_name || cyrillic_name
   end
 
- 
-
   attr_reader :name
-  
+ 
+  def each_train
+    @train_list.each {|train| yield(train)}
+  end
+ 
   def accept_train (train)  
     raise ProhibitionError, "Station #{@name} trying to accept train ##{train.num} which is already there" if @train_list.include?(train)
     raise ProtectionError, "Invalid train #{train.num} requests acceptance by station #{@name}" if !train.valid?
