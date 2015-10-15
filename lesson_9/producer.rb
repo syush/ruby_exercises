@@ -1,5 +1,6 @@
 module Producer
 
-attr_accessor :producer
+  attr_accessor :producer
 
 end
+

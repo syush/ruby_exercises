@@ -5,26 +5,26 @@ require_relative 'exceptions'
 class Car
 
   include InstanceCounter
+  include Producer
+
+  attr_reader :type
+  attr_reader :num
+
   def initialize(seats_or_load)
     @num = 0
     @train = nil
     register_instance
   end
 
-  include Producer
-  
-  attr_reader :type
-  attr_reader :num
-
   def valid?
     @num >= 0
   end
- 
+
   def attach(train, num)
-    raise ProtectionError, "Car attachted to invalid train ##{train.num}" if !train.valid?
-    raise ProtectionError, "Car was assigned non-positive number #{num}" if num <= 0
+    fail ProtectionError, "Car attachted to invalid train ##{train.num}" unless train.valid?
+    fail ProtectionError, "Car was assigned non-positive number #{num}" if num <= 0
     @num = num
-    @train = train    
+    @train = train
   end
 
   def detach
@@ -36,3 +36,4 @@ class Car
     @num == 0
   end
 end
+

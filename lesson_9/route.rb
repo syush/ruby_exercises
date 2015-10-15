@@ -2,10 +2,10 @@ require_relative 'station'
 require_relative 'instance_counter'
 require_relative 'exceptions'
 
-
 class Route
 
   include InstanceCounter
+
   def initialize(first, last)
     @list = [first, last]
     validate!
@@ -14,22 +14,32 @@ class Route
   end
 
   def add_station(new_station, prev_station)
-    raise ProtectionError, "A non-station trying to be inserted to the route" if !new_station.respond_to?(:accept_train)
-    raise ProtectionError, "Invalid station #{new_station.name} trying to be inserted to the route" if !new_station.valid?
-    raise ProtectionError, "Route doesn't contain station #{prev_station.name}" if !@list.include?(prev_station)
-    raise ProhibitionError, "Route already contains station #{new_station.name}" if @list.include?(new_station)
+    unless new_station.respond_to?(:accept_train)
+      fail ProtectionError, "A non-station trying to be inserted to the route"
+    end
+    unless new_station.valid?
+      fail ProtectionError, "Invalid station #{new_station.name} trying insertion to the route"
+    end
+    unless @list.include?(prev_station)
+      fail ProtectionError, "Route doesn't contain station #{prev_station.name}"
+    end
+    if @list.include?(new_station)
+      fail ProhibitionError, "Route already contains station #{new_station.name}"
+    end
     @list.insert(@list.index(prev_station) + 1, new_station)
   end
-  
+
   def remove_station(station)
-    raise ProhibitionError, "Can't remove #{station.name} from the route since it's not there"  if @list.include?(station)
+    if @list.include?(station)
+      fail ProhibitionError, "Can't remove #{station.name} from the route since it's not there"
+    end
     @list.delete(station)
   end
 
   def first
     @list.first
   end
-  
+
   def last
     @list.last
   end
@@ -43,12 +53,16 @@ class Route
   end
 
   def next(station)
-    raise ProhibitionError, "Station #{station.name} is not on the route" if !@list.include?(station)
+    unless @list.include?(station)
+      fail ProhibitionError, "Station #{station.name} is not on the route"
+    end
     @list[@list.index(station) + 1]
   end
 
   def prev(station)
-    raise ProhibitionError, "Station #{station.name} is not on the route" if !@list.include?(station)
+    unless @list.include?(station)
+      fail ProhibitionError, "Station #{station.name} is not on the route"
+    end
     @list[@list.index(station) - 1]
   end
 
@@ -57,22 +71,29 @@ class Route
   end
 
   def print_text
-    text = ""
-    @list.each {|station| text += "-" + station.name + "-"}
-    print text
+    print to_s 
   end
 
   def valid?
     true
   end
 
-private
+  def to_s
+    @list.map(&:name).join('--')
+  end
+
+  private
 
   def validate!
-    @list.each do |station| 
-      raise ProtectionError, "Invalid station #{station.name} added to route" if !station.respond_to?(:accept_train) || !station.valid?
+    @list.each do |station|
+      if !station.respond_to?(:accept_train) || !station.valid?
+        fail ProtectionError, "Invalid station #{station.name} added to route"
+      end
     end
-    raise ProtectionError, "Start and final stations are the same station." if @list.first == @list.last
+    if @list.first == @list.last
+      fail ProtectionError, "Start and final stations are the same station."
+    end
   end
 
 end
+

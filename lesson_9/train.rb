@@ -7,6 +7,30 @@ require_relative 'exceptions'
 class Train
 
   include InstanceCounter
+  include Producer
+
+  attr_reader :num
+  attr_reader :type
+  attr_reader :at_station
+  attr_reader :cars
+
+  @@all_trains = {}
+
+  def self.all_trains
+    @@all_trains
+  end
+
+  def self.get_by_number(num)
+    train = @@all_trains[num]
+  end
+
+  def self.none?
+    @@all_trains == {}
+  end
+
+  def self.correct_num_format?(num)
+    num =~ /\A[a-zа-я0-9]{3}-?[a-zа-я0-9]{2}\z/i
+  end
 
   def initialize (num, type)
     @num = num
@@ -21,52 +45,27 @@ class Train
     self.class.correct_num_format?(@num) && correct_type?(@type)
   end
 
-  @@all_trains = {}
-
-  def self.all_trains
-    @@all_trains
-  end
- 
-  def self.get_by_number(num)
-    train = @@all_trains[num]
-  end
-
-  def self.none?
-    @@all_trains == {}
-  end
- 
-  def self.correct_num_format?(num)
-    num =~/\A[a-zа-я0-9]{3}-?[a-zа-я0-9]{2}\z/i
-  end
-
-
-  include Producer
-
-  attr_reader :num
-  attr_reader :type
-  attr_reader :at_station
-  attr_reader :cars
-
-  
   def each_car
-    @cars.each {|car| yield(car)}
+    @cars.each { |car| yield(car) }
   end
 
   def speed_up
-    raise ProhibitionError, "Train ##{@num} can't speed up since it's moving at max speed"  if @speed > 100 
-    @speed += 10 
+    if @speed > 100
+      fail ProhibitionError, "Train ##{@num} can't speed up since it's moving at max speed"
+    end
+    @speed += 10
   end
-   
+
   def print_speed
     if @speed > 0
-      puts "Train ##{@num} is moving at speed #{@speed} km/h" 
+      puts "Train ##{@num} is moving at speed #{@speed} km/h"
     else
       puts "Train ##{@num} is not moving"
     end
   end
 
   def slow_down
-    raise ProhibitionError, "Train ##{@num} can't slow down since it is not moving" if @speed == 0
+    fail ProhibitionError, "Train ##{@num} can't slow down since it is not moving" if @speed == 0
     @speed -= 10
   end
 
@@ -75,16 +74,22 @@ class Train
   end
 
   def add_car(car)
-    raise ProhibitionError, "Can't add a car to train ##{@num} since it is moving"  if @speed > 0
-    raise ProtectionError, "Can't attach a #{car.type} car to #{@type} train ##{@num}" if car.type != @type
-    raise ProtectionError, "Invalid car trying to be attached to train ##{@num}" if !car.valid?
+    fail ProhibitionError, "Can't add a car to train ##{@num} since it is moving"  if @speed > 0
+    unless car.type == @type
+      fail ProtectionError, "Can't attach a #{car.type} car to #{@type} train ##{@num}"
+    end
+    fail ProtectionError, "Invalid car trying to be attached to train ##{@num}" unless car.valid?
     @cars << car
     car.attach(self, @cars.size)
   end
 
   def remove_car
-    raise ProhibitionError, "Can't remove a car; train ##{@num} is just a bare locomotive" if @cars.empty? 
-    raise ProhibitionError, "Can't remove a car from train ##{@num} since it is moving"  if @speed > 0
+    if @cars.empty?
+      fail ProhibitionError, "Can't remove a car; train ##{@num} is just a bare locomotive"
+    end
+    if @speed > 0
+      fail ProhibitionError, "Can't remove a car from train ##{@num} since it is moving"
+    end
     @cars.last.detach
     @cars.pop
   end
@@ -92,32 +97,40 @@ class Train
   def print_num_cars
     puts "Train ##{@num} has #{@cars.size} cars."
   end
-  
+
   def num_cars
     @cars.size
   end
- 
+
   def arrive
-    raise ProhibitionError, "No route has been assigned to train ##{@num}" if !@route
-    raise ProhibitionError, "Train ##{@num} is already at station #{@station.name}"  if @at_station
+    fail ProhibitionError, "No route has been assigned to train ##{@num}" unless @route
+    fail ProhibitionError, "Train ##{@num} is already at station #{@station.name}" if @at_station
     @station.accept_train(self)
     @at_station = true
   end
 
   def depart_forward
-    raise ProhibitionError, "No route has been assigned to train ##{@num}" if !@route
-    raise ProhibitionError, "Train ##{@num} can't depart because it is not at a station." if !@at_station || !@station
-    raise ProhibitionError, "Train ##{@num} is at the final destination; can't move forward." if @route.last?(@station)
+    fail ProhibitionError, "No route has been assigned to train ##{@num}" unless @route
+    if !@at_station || !@station
+      fail ProhibitionError, "Train ##{@num} can't depart because it is not at a station."
+    end
+    if @route.last?(@station)
+      fail ProhibitionError, "Train ##{@num} is at the final destination; can't move forward."
+    end
     @station.release_train(self)
     @at_station = false
     @forward = true
     @station = @route.next(@station)
   end
-  
+
   def depart_backward
-    raise ProhibitionError, "No route has been assigned to train ##{@num}" if !@route
-    raise ProhibitionError, "Train ##{@num} can't depart because it is not at a station." if !@at_station || !@station
-    raise ProhibitionError, "Train ##{@num} is at the starting point; can't move backward." if @route.first?(@station)
+    fail ProhibitionError, "No route has been assigned to train ##{@num}" unless @route
+    if !@at_station || !@station
+      fail ProhibitionError, "Train ##{@num} can't depart because it is not at a station."
+    end
+    if @route.first?(@station)
+      fail ProhibitionError, "Train ##{@num} is at the starting point; can't move backward."
+    end
     @station.release_train(self)
     @at_station = false
     @forward = false
@@ -125,7 +138,9 @@ class Train
   end
 
   def move_directly(station)
-    raise ProtectionError, "Train ##{@num} is directed to invalid station #{station.name}" if !station.valid?
+    unless station.valid?
+      fail ProtectionError, "Train ##{@num} is directed to invalid station #{station.name}"
+    end
     @station.release_train(self) if @at_station
     @at_station = true
     @station = station
@@ -133,16 +148,17 @@ class Train
   end
 
   def assign_route(route)
-    raise ProtectionError, "Invalid route is assigned to train ##{@num}" if !route.valid?
+    fail ProtectionError, "Invalid route is assigned to train ##{@num}" unless route.valid?
     if @station && @at_station && !route.include?(@station)
-      raise ProhibitionError, "Before assigning the route, train ##{@num} must leave #{@station.name} which is not on the route."
+      fail ProhibitionError, "Before assigning the route, train ##{@num}"\
+                              " must leave #{@station.name} which is not on the route."
     end
     @route = route
-    @station = @route.first if !@at_station
+    @station = @route.first unless @at_station
   end
 
   def print_current_station
-    if @at_station 
+    if @at_station
       puts "Train ##{@num} is currently at #{@station.name}."
     else
       puts "Train ##{@num} is not at a station currently."
@@ -150,7 +166,7 @@ class Train
   end
 
   def print_prev_station
-    if @route.first?(@station) && (@at_station || @forward)         
+    if @route.first?(@station) && (@at_station || @forward)
       puts "Train ##{@num} is at the initial station."
     else
       prev =  @at_station || @forward ? @route.prev(@station) : @station
@@ -159,15 +175,19 @@ class Train
   end
 
   def print_next_station
-    if @route.last?(@station) && (@at_station || !@forward)         
+    if @route.last?(@station) && (@at_station || !@forward)
       puts "Train ##{@num} is at the final destination."
     else
-      nxt =  !@at_station && @forward ? @station : @route.next(@station) 
+      nxt =  !@at_station && @forward ? @station : @route.next(@station)
       puts "The next station on the route for train ##{@num} is #{nxt.name}."
     end
   end
- 
-protected
+
+  def to_s
+    @num
+  end
+
+  protected
 
   def init_defaults
     @speed = 0
@@ -183,10 +203,12 @@ protected
   end
 
   def validate!
-    raise ProtectionError, "Wrong train format" if !self.class.correct_num_format?(@num)
-    raise ProtectionError, "Unknown train type" if !correct_type?(@type)
-    raise ProhibitionError, "Train with this number already exists" if self.class.get_by_number(@num)    
-  end  
+    fail ProtectionError, "Wrong train format" unless self.class.correct_num_format?(@num)
+    fail ProtectionError, "Unknown train type" unless correct_type?(@type)
+    if self.class.get_by_number(@num)
+      fail ProhibitionError, "Train with this number already exists"
+    end
+  end
 
 end
 
