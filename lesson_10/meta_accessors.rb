@@ -4,14 +4,14 @@ module MetaAccessors
     names.each do |name|
       var_name = name_to_var(name)
       history_name = "#{name}_history"
-      history_var_name = "@#{history_name}".to_sym
+      history_var_name = name_to_var(history_name)
       simple_getter(name)
       define_method("#{name}=") do |value|
-        new_history = (send history_name.to_sym) << value
+        new_history = ((send history_name.to_sym) || []) << value
         instance_variable_set(var_name, value)
         instance_variable_set(history_var_name, new_history)
       end
-      define_method(history_name) { instance_variable_get(history_var_name) || [] }
+      simple_getter(history_name)
     end
   end
 
