@@ -1,12 +1,16 @@
 require_relative 'train'
 require_relative 'instance_counter'
 require_relative 'exceptions'
+require_relative 'meta_accessors'
 
 class Station
 
   include InstanceCounter
+  extend MetaAccessors
 
   attr_reader :name
+  attr_accessor_with_history :manager
+  strong_attr_accessor :manager_appoint_year, Fixnum
 
   @@all_stations = {}
 

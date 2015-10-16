@@ -17,7 +17,7 @@ module MetaAccessors
 
   def strong_attr_accessor(name, class_name)
     simple_getter(name)
-    complex_setter(name) do
+    complex_setter(name) do |value|
       fail "Assigned value is not a #{class_name}" unless value.is_a?(class_name)
     end
   end
@@ -36,9 +36,10 @@ module MetaAccessors
   def complex_setter(name)
     var_name = name_to_var(name)
     define_method("#{name}=") do |value|
-      yield
+      yield(value)
       instance_variable_set(var_name, value)
     end
   end
 
 end
+

@@ -30,6 +30,8 @@ class Menu
       {text:"Move a train directly to a particular station", link:method(:move_to_station)},
       {text:"Load/unload a cargo car", link:method(:cargo_load_unload)},
       {text:"Occupy/release a seat in a passenger car", link:method(:passenger_on_off)},
+      {text:"Appoint a station manager", link:method(:appoint_manager)},
+      {text:"Lookup station managers", link:method(:lookup_managers)},
       {text:"Print free seats in a train", link:method(:print_free_seats)},
       {text:"Show the list of stations", link:method(:print_stations)},
       {text:"Show the list of routes", link:method(:print_routes)},
@@ -323,6 +325,29 @@ class Menu
     else
       fail InputError, "I don't understand you"
     end
+  end
+
+  def appoint_manager
+    puts "Let's appoint a new person on the position of station manager. Enter the station name:"
+    station = get_from_user(:station)
+    puts "Enter new manager's name for #{station.name} station:"
+    name = gets.chomp
+    station.manager = name
+    puts "Since which year is #{name} the manager of #{station.name} station?"
+    year = gets.chomp.to_i
+    station.manager_appoint_year = year
+    puts "Done"
+  end
+
+  def lookup_managers 
+    puts "Please enter the station name:"
+    station = get_from_user(:station)
+    current_manager = station.manager
+    history = station.manager_history
+    year = station.manager_appoint_year
+    puts "The current manager of #{station.name} since #{year} is #{current_manager}."
+    puts "The full history of #{station.name} managers is below:"
+    history.each { |manager| puts manager } 
   end
 
   def print_free_seats
