@@ -148,7 +148,6 @@ class Menu
   def create_train
     puts "Let's create a train. Please enter its unique number:"
     num = gets.chomp
-    fail InputError, "Train number doesn't fit the format rules" if !Train.correct_num_format?(num)
     puts "Please choose the train type: cargo (c) or passenger (p):"
     type = gets.chomp
     if ["C", "CARGO"].include?(type.upcase)

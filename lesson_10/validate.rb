@@ -25,7 +25,7 @@ module Validate
             fail ProtectionError, "Instance var @#{name} of class #{self.class} doesn't exist"
           end
         when :format
-          if value && (value !~ /#{args[0]}/)
+          if value && (value !~ args[0])
             fail ProtectionError, "Instance var @#{name} of class #{self.class} "\
                                   "doesn't match format"
           end

@@ -18,7 +18,7 @@ class Train
 
   validate :type, :user_checker, :correct_type?
   validate :num, :type, String
-  validate :num, :format, '\A[a-zа-яA-ZА-Я0-9]{3}-?[a-zа-яA-ZА-Я0-9]{2}\z'
+  validate :num, :format, /\A[a-zа-я0-9]{3}-?[a-zа-я0-9]{2}\z/i
   validate :num, :unique_object, :get_by_number
 
   @@all_trains = {}
@@ -33,10 +33,6 @@ class Train
 
   def self.none?
     @@all_trains == {}
-  end
-
-  def self.correct_num_format?(num)
-    num =~ /\A[a-zа-я0-9]{3}-?[a-zа-я0-9]{2}\z/i
   end
 
   def initialize (num, type)
