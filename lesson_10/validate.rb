@@ -102,7 +102,9 @@ module Validate
 
   def validate!
     [self.class, self.class.superclass].each do |cl|
-      cl.list_of_checks.each { |check| method(check).call }
+      if defined?(cl.list_of_checks)
+        cl.list_of_checks.each { |check| method(check).call }
+      end
     end
   end
 
