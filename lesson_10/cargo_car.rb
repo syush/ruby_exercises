@@ -39,7 +39,7 @@ class CargoCar < Car
     fail ProtectionError, "Non-positive volume is supposed to be unloaded" if volume <= 0
     if @capacity - @free_space < volume
       fail ProhibitionError, "Can't unload #{volume} m^3;"\
-                              " the car contains only #{@capacity - @free_space} m^3 of cargo"
+                             " the car contains only #{@capacity - @free_space} m^3 of cargo"
     end
     @free_space += volume
   end
