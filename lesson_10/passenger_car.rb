@@ -1,20 +1,25 @@
 require_relative 'car'
 require_relative 'exceptions'
+require_relative 'validate'
 
 class PassengerCar < Car
 
+  include Validate
+
   attr_reader :free_seats
-  
+ 
+  validate :max_seats, :presence
+  validate :free_seats, :presence
+  validate :max_seats, :type, Fixnum 
+  validate :max_seats, :greater, 0
+  validate :free_seats, :greater_or_equal, 0
+  validate :type, :equal, :passenger
+
   def initialize(max_seats)
     super
     @type = :passenger
-    @free_seats = @max_seats = max_seats.to_i
+    @free_seats = @max_seats = max_seats
     validate!
-  end
-
-  def valid?
-    car_valid = super
-    car_valid &= (@max_seats > 0 && @free_seats >= 0 && @type == :passenger)
   end
 
   def occupied_seats
@@ -30,12 +35,6 @@ class PassengerCar < Car
   def release_seat
     fail ProhibitionError, "Car is empty" if @free_seats == @max_seats
     @free_seats += 1
-  end
-
-  private
-
-  def validate!
-    fail ProtectionError, "Non-positive passenger train capacity" if @max_seats <= 0
   end
 
 end

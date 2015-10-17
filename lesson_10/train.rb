@@ -3,16 +3,23 @@ require_relative 'route'
 require_relative 'producer'
 require_relative 'instance_counter'
 require_relative 'exceptions'
+require_relative 'validate'
 
 class Train
 
   include InstanceCounter
   include Producer
+  include Validate
 
   attr_reader :num
   attr_reader :type
   attr_reader :at_station
   attr_reader :cars
+
+  validate :type, :user_checker, :correct_type?
+  validate :num, :type, String
+  validate :num, :format, '\A[a-zа-яA-ZА-Я0-9]{3}-?[a-zа-яA-ZА-Я0-9]{2}\z'
+  validate :num, :unique_object, :get_by_number
 
   @@all_trains = {}
 
@@ -35,14 +42,10 @@ class Train
   def initialize (num, type)
     @num = num
     @type = type
-    validate!
     init_defaults
+    validate!
     @@all_trains[num] = self
     register_instance
-  end
-
-  def valid?
-    self.class.correct_num_format?(@num) && correct_type?(@type)
   end
 
   def each_car
@@ -183,11 +186,15 @@ class Train
     end
   end
 
-  def to_s
-    @num
-  end
+ # def to_s
+ #   @num
+ # end
 
   protected
+
+  def self.correct_type?(type)
+    [:cargo,:passenger].include?(type)
+  end
 
   def init_defaults
     @speed = 0
@@ -196,18 +203,6 @@ class Train
     @at_station = false
     @route = nil
     @cars = []
-  end
-
-  def correct_type?(type)
-    [:cargo,:passenger].include?(@type)
-  end
-
-  def validate!
-    fail ProtectionError, "Wrong train format" unless self.class.correct_num_format?(@num)
-    fail ProtectionError, "Unknown train type" unless correct_type?(@type)
-    if self.class.get_by_number(@num)
-      fail ProhibitionError, "Train with this number already exists"
-    end
   end
 
 end

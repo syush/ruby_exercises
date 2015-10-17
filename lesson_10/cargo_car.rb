@@ -1,20 +1,25 @@
 require_relative 'car'
 require_relative 'exceptions'
+require_relative 'validate'
 
 class CargoCar < Car
 
+  include Validate
+
   attr_reader :free_space
+
+  validate :capacity, :presence
+  validate :free_space, :presence
+  validate :capacity, :type, Float
+  validate :capacity, :greater, 0
+  validate :free_space, :greater_or_equal, 0
+  validate :type, :equal, :cargo
 
   def initialize(capacity)
     super
     @type = :cargo
     @free_space = @capacity = capacity.to_f
     validate!
-  end
-
-  def valid?
-    car_valid = super
-    car_valid &= (@capacity > 0 && @free_space >= 0 && @type == :cargo)
   end
 
   def current_load
@@ -37,12 +42,6 @@ class CargoCar < Car
                               " the car contains only #{@capacity - @free_space} m^3 of cargo"
     end
     @free_space += volume
-  end
-
-  private
-
-  def validate!
-    fail ProtectionError, "Non-positive cargo train capacity" if @capacity <= 0
   end
 
 end

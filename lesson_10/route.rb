@@ -1,10 +1,16 @@
 require_relative 'station'
 require_relative 'instance_counter'
 require_relative 'exceptions'
+require_relative 'validate'
 
 class Route
 
   include InstanceCounter
+  include Validate
+
+  validate :list, :each_type, Station
+  validate :list, :each_valid
+  validate :list, :unique_elements
 
   def initialize(first, last)
     @list = [first, last]
@@ -74,25 +80,8 @@ class Route
     print to_s 
   end
 
-  def valid?
-    true
-  end
-
   def to_s
     @list.map(&:name).join('--')
-  end
-
-  private
-
-  def validate!
-    @list.each do |station|
-      if !station.respond_to?(:accept_train) || !station.valid?
-        fail ProtectionError, "Invalid station #{station.name} added to route"
-      end
-    end
-    if @list.first == @list.last
-      fail ProtectionError, "Start and final stations are the same station."
-    end
   end
 
 end

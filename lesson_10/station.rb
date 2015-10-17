@@ -2,15 +2,21 @@ require_relative 'train'
 require_relative 'instance_counter'
 require_relative 'exceptions'
 require_relative 'meta_accessors'
+require_relative 'validate'
 
 class Station
 
   include InstanceCounter
+  include Validate
   extend MetaAccessors
 
   attr_reader :name
   attr_accessor_with_history :manager
   strong_attr_accessor :manager_appoint_year, Fixnum
+
+  validate :name, :presence
+  validate :name, :type, String
+  validate :name, :user_checker, :valid_name?
 
   @@all_stations = {}
 
@@ -27,10 +33,10 @@ class Station
   end
 
   def self.valid_name?(name)
-    if name =~ /\A([A-Z]([A-Z]*|[a-z]*)|\d+)(( |-)([A-Z]?([A-Z]*|[a-z]*)|d+))*\z/
+    if name =~ /\A([A-Z]([A-Z]*|[a-z]*)|\d+)(( |-)([A-Z]?([A-Z]+|[a-z]+)|\d+))*\z/
       latin_name = true
     end
-    if name =~ /\A([А-Я]([А-Я]*|[а-я]*)|\d+)(( |-)([А-Я]?([А-Я]*|[а-я]*)|d+))*\z/
+    if name =~ /\A([А-Я]([А-Я]*|[а-я]*)|\d+)(( |-)([А-Я]?([А-Я]+|[а-я]+)|\d+))*\z/
       cyrillic_name = true
     end
     latin_name || cyrillic_name
@@ -38,14 +44,10 @@ class Station
 
   def initialize (name)
     @name = name
-    validate!
     @train_list = []
     @@all_stations[name] = self
+    validate!
     register_instance
-  end
-
-  def valid?
-    self.class.valid_name?(@name)
   end
 
   def each_train
@@ -97,12 +99,6 @@ class Station
 
   def to_s
     @name
-  end
-
-  private
-
-  def validate!
-    fail ProtectionError, "Strange station name" unless self.class.valid_name?(@name)
   end
 
 end

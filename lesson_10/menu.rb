@@ -151,7 +151,6 @@ class Menu
     fail InputError, "Train number doesn't fit the format rules" if !Train.correct_num_format?(num)
     puts "Please choose the train type: cargo (c) or passenger (p):"
     type = gets.chomp
-    new_train = nil
     if ["C", "CARGO"].include?(type.upcase)
       new_train = CargoTrain.new(num)
     elsif ["P", "PASSENGER"].include?(type.upcase)
