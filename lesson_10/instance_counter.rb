@@ -18,7 +18,16 @@ module InstanceCounter
   private
 
   def register_instance
-    self.class.increase_counter
+    done = false
+    cl = self.class
+    until done do
+      if defined?(cl.increase_counter)
+        cl.increase_counter
+        cl = cl.superclass
+      else
+        done = true
+      end
+    end
   end
 
 end
